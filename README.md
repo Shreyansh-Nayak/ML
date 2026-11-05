@@ -45,7 +45,7 @@ How to launch it, with a screenshot.
 
 ## 10. How to Run
 ```bash
-git clone <repo-url>
+git clone <https://github.com/Shreyansh-Nayak/ML>
 cd placement-prediction
 python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
