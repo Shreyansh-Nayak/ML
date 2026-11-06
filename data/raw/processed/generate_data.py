@@ -44,6 +44,8 @@ def generate_academics(n=cfg.N_STUDENTS, seed=cfg.SEED):
     return df.round(2)
 
 
+
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -59,3 +61,4 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(cfg.VISUALS_DIR / "academics_corr_heatmap.png", dpi=150)
     plt.show()
+

@@ -1,0 +1,1 @@
+“Dream-eligible was 37 of 1000, too few to create competition for 32 seats. Raised N_STUDENTS to 3000 and APPLICATIONS_PER_STUDENT to 5 instead of loosening the company rules, because the rules are the process being simulated.”

@@ -6,7 +6,7 @@ from pathlib import Path
 
 # ---------- Reproducibility ----------
 SEED = 42
-N_STUDENTS = 1000
+N_STUDENTS = 3000
 
 # ---------- Paths ----------
 ROOT = Path(__file__).resolve().parent
@@ -33,7 +33,7 @@ ACADEMIC_CORR = {
 # ---------- Companies ----------
 N_NON_DREAM = 8
 N_DREAM = 4
-APPLICATIONS_PER_STUDENT = 3        # average, among companies the student is eligible for
+APPLICATIONS_PER_STUDENT = 5        # average, among companies the student is eligible for
 VACANCIES_PER_COMPANY = 8
 
 # ---------- Stage 1: eligibility rules (rule-based filter) ----------
