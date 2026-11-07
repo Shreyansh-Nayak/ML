@@ -54,11 +54,11 @@ OA_SKILL_WEIGHTS = {
 # Section score = mean + spread * skill_signal + noise
 OA_SECTIONS = {
     #              mean  spread  noise_std
-    "logical":    {"mean": 62, "spread": 12, "noise": 10},
-    "quant":      {"mean": 60, "spread": 13, "noise": 10},
-    "coding":     {"mean": 58, "spread": 15, "noise": 9},
-    "english":    {"mean": 65, "spread": 8,  "noise": 13},
-    "behavioral": {"mean": 66, "spread": 6,  "noise": 14},
+    "logical":    {"mean": 50, "spread": 12, "noise": 10},
+    "quant":      {"mean": 48, "spread": 13, "noise": 10},
+    "coding":     {"mean": 46, "spread": 15, "noise": 9},
+    "english":    {"mean": 53, "spread": 8,  "noise": 13},
+    "behavioral": {"mean": 54, "spread": 6,  "noise": 14},
 }
 # Weights for the OA total (must sum to 1.0)
 OA_TOTAL_WEIGHTS = {"logical": 0.20, "quant": 0.20, "coding": 0.30,

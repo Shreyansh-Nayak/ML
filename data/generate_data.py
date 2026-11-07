@@ -78,7 +78,55 @@ def build_applications(academics, seed=cfg.SEED):
     return apps
 
 
+def generate_oa(apps, academics, seed=cfg.SEED):
+    """
+    Add OA section scores, OA total and oa_cleared to ELIGIBLE applications only.
+    Ineligible rows keep NaN, meaning "never reached this stage".
+    """
+    rng = np.random.default_rng(seed + 2)       # new independent random stream
+    w = cfg.OA_SKILL_WEIGHTS
 
+    # 1) One hidden skill value PER STUDENT (not per application)
+    def z(s):
+        return (s - s.mean()) / s.std()
+
+    raw = (
+        w["cgpa"] * z(academics["cgpa"])
+        + w["tenth_pct"] * z(academics["tenth_pct"])
+        + w["twelfth_pct"] * z(academics["twelfth_pct"])
+        + w["jee_percentile"] * z(academics["jee_percentile"])
+        + w["random"] * rng.standard_normal(len(academics))   # unmeasured factors
+    )
+    skill = (raw - raw.mean()) / raw.std()      # re-standardize, same lesson as CGPA
+    skill_by_student = pd.Series(skill.to_numpy(), index=academics["student_id"])
+
+    # 2) Copy the student's skill onto each of their applications
+    apps = apps.copy()
+    mask = apps["eligible"].to_numpy()
+    skill_rows = apps.loc[mask, "student_id"].map(skill_by_student).to_numpy()
+    n = mask.sum()
+
+    # 3) Section scores: mean + spread * skill + noise (noise is fresh per application)
+    for name, p in cfg.OA_SECTIONS.items():
+        score = p["mean"] + p["spread"] * skill_rows + p["noise"] * rng.standard_normal(n)
+        apps[name] = np.nan
+        apps.loc[mask, name] = np.clip(score, 0, 100)
+
+    # 4) OA total = weighted sum of sections
+    sections = list(cfg.OA_SECTIONS)
+    apps["oa_total"] = np.nan
+    apps.loc[mask, "oa_total"] = sum(
+        cfg.OA_TOTAL_WEIGHTS[s] * apps.loc[mask, s] for s in sections
+    )
+
+    # 5) Cleared = total >= cutoff AND every section >= minimum
+    cleared = (apps.loc[mask, "oa_total"] >= cfg.OA_CUTOFF_TOTAL) & (
+        apps.loc[mask, sections] >= cfg.OA_MIN_PER_SECTION
+    ).all(axis=1)
+    apps["oa_cleared"] = pd.Series(pd.NA, index=apps.index, dtype="boolean")
+    apps.loc[mask, "oa_cleared"] = cleared.to_numpy()
+
+    return apps.round(2)
 def plot_academics_heatmap(df):
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -91,15 +139,29 @@ def plot_academics_heatmap(df):
     plt.close()
 
 
+def r2_oa_vs_academics(apps):
+    """How much of OA total do the four academic columns explain? (eligible rows)"""
+    from sklearn.linear_model import LinearRegression
+    d = apps[apps["eligible"]]
+    X = d[["tenth_pct", "twelfth_pct", "jee_percentile", "cgpa"]]
+    return LinearRegression().fit(X, d["oa_total"]).score(X, d["oa_total"])
+
+
 if __name__ == "__main__":
     academics = generate_academics()
     plot_academics_heatmap(academics)
-
     apps = build_applications(academics)
-    print("Total applications:", len(apps))
-    print("\nEligible applications by category:")
-    print(apps.groupby("company_category")["eligible"].sum())
-    print("\nEligible applications per company:")
-    print(apps.groupby("company_id")["eligible"].sum())
-    print("\nApplications per student (should all be", cfg.APPLICATIONS_PER_STUDENT, "):")
-    print(apps.groupby("student_id").size().value_counts())
+    apps = generate_oa(apps, academics)
+
+    print("Funnel:")
+    print("  applications :", len(apps))
+    print("  eligible     :", int(apps["eligible"].sum()))
+    print("  OA cleared   :", int(apps["oa_cleared"].sum()))
+    print("\nOA cleared by category:")
+    print(apps[apps["eligible"]].groupby("company_category")["oa_cleared"]
+          .agg(cleared="sum", eligible="count"))
+    print("\nOA cleared per dream company (need > 8 for competition):")
+    print(apps[apps.company_category == "dream"].groupby("company_id")["oa_cleared"].sum())
+    print("\nMean section scores (eligible):")
+    print(apps.loc[apps.eligible, list(cfg.OA_SECTIONS) + ["oa_total"]].mean().round(1))
+    print("\nR2 of OA total vs academics:", round(r2_oa_vs_academics(apps), 3))

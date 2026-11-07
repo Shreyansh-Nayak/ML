@@ -64,3 +64,9 @@
 ## 12. Project structure fixes
 **Issue:** `generate_data.py` and a check script were in `data/raw/processed/`, which broke the planned structure.
 **Action:** Moved the generator to `data/generate_data.py`, deleted the stray folder, and kept `data/raw/` and `data/processed/` as separate folders. Raw data is never edited by hand.
+
+## 13. Tuning OA section means
+**Observation:** First OA run gave an 80% clear rate (99% for dream) because eligible students are selected on academics, so their average skill is about +1 SD, while the section means were set for an average student.
+**Decision:** Lowered all five section means by 12 points, leaving spreads and noise unchanged.
+**Result:** Non-dream clear rate 29.8%, dream 70%, R² 0.643. Dream is easier than non-dream because dream-eligible students are the academic top slice. Accepted as realistic; lowering further would starve the interview stage of rows.
+**Note for modelling:** Selected is about 10% of interviewed rows (imbalanced), so use recall, F1 and ROC-AUC. A student can appear in several rows, so use GroupKFold by student_id.
