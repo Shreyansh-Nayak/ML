@@ -70,3 +70,9 @@
 **Decision:** Lowered all five section means by 12 points, leaving spreads and noise unchanged.
 **Result:** Non-dream clear rate 29.8%, dream 70%, R² 0.643. Dream is easier than non-dream because dream-eligible students are the academic top slice. Accepted as realistic; lowering further would starve the interview stage of rows.
 **Note for modelling:** Selected is about 10% of interviewed rows (imbalanced), so use recall, F1 and ROC-AUC. A student can appear in several rows, so use GroupKFold by student_id.
+
+## 14. Interview stage and H2 calibration
+**Observation:** With boost 0.15 the coding coefficient was 0.058 (collinearity with oa_total and range restriction, since only OA-clearers reach this stage).
+**Decision:** Raised direct_coding_boost_on_technical to 0.25 and lowered technical base from 10 to 4 to keep mean technical near 67.
+**Result:** Mean technical 68.8, clipping at 100 only 4 rows, oa_total coefficient 0.665 (planted 0.65), coding coefficient 0.157 (planted 0.25).
+**Conclusion:** The direct coding effect is detectable but underestimated at this sample size. Stopped tuning to avoid fitting the answer. Positive sign alone does not confirm H2 because the effect was planted.

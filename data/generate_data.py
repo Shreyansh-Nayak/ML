@@ -127,6 +127,66 @@ def generate_oa(apps, academics, seed=cfg.SEED):
     apps.loc[mask, "oa_cleared"] = cleared.to_numpy()
 
     return apps.round(2)
+
+def generate_interviews(apps, seed=cfg.SEED):
+    """
+    Add technical, hr and final_score for applications that cleared the OA.
+    Everyone else keeps NaN ("never reached this stage").
+    """
+    rng = np.random.default_rng(seed + 3)        # new independent random stream
+    apps = apps.copy()
+
+    # Rows that cleared the OA (oa_cleared holds True / False / <NA>)
+    mask = apps["oa_cleared"].fillna(False).to_numpy(dtype=bool)
+    n = mask.sum()
+    d = apps.loc[mask]
+
+    # Technical interview: driven by OA total, plus an EXTRA push from coding (plants H2)
+    t = cfg.TECHNICAL
+    technical = (
+        t["base"]
+        + t["w_oa"] * d["oa_total"]
+        + t["direct_coding_boost_on_technical"] * d["coding"]
+        + t["noise"] * rng.standard_normal(n)
+    )
+
+    # HR interview: driven by OA total and the "soft" sections
+    h = cfg.HR
+    hr = (
+        h["base"]
+        + h["w_oa"] * d["oa_total"]
+        + h["w_soft"] * (d["english"] + d["behavioral"]) / 2
+        + h["noise"] * rng.standard_normal(n)
+    )
+
+    apps["technical"] = np.nan
+    apps["hr"] = np.nan
+    apps.loc[mask, "technical"] = np.clip(technical, 0, 100).to_numpy()
+    apps.loc[mask, "hr"] = np.clip(hr, 0, 100).to_numpy()
+
+    # Final score: weighted sum, rounded to an integer so ties can happen (H3)
+    w = cfg.FINAL_SCORE_WEIGHTS
+    final = (
+        w["oa"] * apps.loc[mask, "oa_total"]
+        + w["technical"] * apps.loc[mask, "technical"]
+        + w["hr"] * apps.loc[mask, "hr"]
+    )
+    apps["final_score"] = np.nan
+    if cfg.ROUND_FINAL_SCORE_TO_INT:
+        final = final.round(0)
+    apps.loc[mask, "final_score"] = final.to_numpy()
+
+    apps[["technical", "hr"]] = apps[["technical", "hr"]].round(2)
+    return apps
+
+def h2_check(apps):
+    """Does coding predict technical BEYOND oa_total? (coefficient should be near the planted 0.15)"""
+    from sklearn.linear_model import LinearRegression
+    d = apps[apps["technical"].notna()]
+    X = d[["oa_total", "coding"]]
+    m = LinearRegression().fit(X, d["technical"])
+    return dict(zip(X.columns, m.coef_.round(3)))
+
 def plot_academics_heatmap(df):
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -148,11 +208,14 @@ def r2_oa_vs_academics(apps):
 
 
 if __name__ == "__main__":
+    # 1) Create the data, one stage at a time (each line uses the previous result)
     academics = generate_academics()
     plot_academics_heatmap(academics)
-    apps = build_applications(academics)
-    apps = generate_oa(apps, academics)
+    apps = build_applications(academics)      # <- 'apps' is born here
+    apps = generate_oa(apps, academics)       # <- and updated here
+    apps = generate_interviews(apps)          # <- only now can this line run
 
+    # 2) Funnel checks
     print("Funnel:")
     print("  applications :", len(apps))
     print("  eligible     :", int(apps["eligible"].sum()))
@@ -160,8 +223,16 @@ if __name__ == "__main__":
     print("\nOA cleared by category:")
     print(apps[apps["eligible"]].groupby("company_category")["oa_cleared"]
           .agg(cleared="sum", eligible="count"))
-    print("\nOA cleared per dream company (need > 8 for competition):")
+    print("\nOA cleared per dream company:")
     print(apps[apps.company_category == "dream"].groupby("company_id")["oa_cleared"].sum())
     print("\nMean section scores (eligible):")
     print(apps.loc[apps.eligible, list(cfg.OA_SECTIONS) + ["oa_total"]].mean().round(1))
     print("\nR2 of OA total vs academics:", round(r2_oa_vs_academics(apps), 3))
+    
+    # 3) Interview stage checks
+    iv = apps[apps["technical"].notna()]
+    print("\nInterview stage rows:", len(iv))
+    print(iv[["oa_total", "technical", "hr", "final_score"]].describe().round(1))
+    print("\nDistinct final scores:", iv["final_score"].nunique())
+    print("H2 coefficients (technical ~ oa_total + coding):", h2_check(apps))
+    print("technical clipped at 100:", (iv["technical"] >= 100).sum())

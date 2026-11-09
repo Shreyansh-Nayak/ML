@@ -68,7 +68,7 @@ OA_MIN_PER_SECTION = 40     # minimum % required in every section
 
 # ---------- Stage 3: interviews ----------
 # technical = base + w_oa*OA_total + coding_boost*coding + noise
-TECHNICAL = {"base": 10, "w_oa": 0.65, "direct_coding_boost_on_technical": 0.15, "noise": 10}
+TECHNICAL = {"base": 4, "w_oa": 0.65, "direct_coding_boost_on_technical": 0.25, "noise": 10}
 # hr = base + w_oa*OA_total + w_soft*(english+behavioral)/2 + noise
 HR = {"base": 15, "w_oa": 0.30, "w_soft": 0.35, "noise": 12}
 
