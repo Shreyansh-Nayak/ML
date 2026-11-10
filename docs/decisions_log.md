@@ -76,3 +76,8 @@
 **Decision:** Raised direct_coding_boost_on_technical to 0.25 and lowered technical base from 10 to 4 to keep mean technical near 67.
 **Result:** Mean technical 68.8, clipping at 100 only 4 rows, oa_total coefficient 0.665 (planted 0.65), coding coefficient 0.157 (planted 0.25).
 **Conclusion:** The direct coding effect is detectable but underestimated at this sample size. Stopped tuning to avoid fitting the answer. Positive sign alone does not confirm H2 because the effect was planted.
+
+## 15. Selection and the coding tie-break (H3)
+**Decision:** Within each company, candidates are ranked by final_score, then coding (higher wins), then application_id (for reproducibility). Top 8 are selected.
+**Result:** 96 selected (8 per company). The last seat was tied on final_score at 6 of 12 companies, and in all 6 the coding tie-break decided it. application_id was never needed.
+**Interpretation:** The tie-break is common in this data because final scores are rounded to integers and many candidates cluster near the cut line. This measures frequency only, not fairness. Result depends on integer rounding.

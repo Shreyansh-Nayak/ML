@@ -186,6 +186,45 @@ def h2_check(apps):
     X = d[["oa_total", "coding"]]
     m = LinearRegression().fit(X, d["technical"])
     return dict(zip(X.columns, m.coef_.round(3)))
+def select_candidates(apps):
+    """
+    Pick the top VACANCIES_PER_COMPANY candidates per company by final_score.
+    Ties are broken by coding (higher wins), then application_id (so results are reproducible).
+    Adds a 'selected' column: True / False for interviewed rows, <NA> for rows that never reached interviews.
+    Returns (apps, h3_info) where h3_info describes how often the tie-break decided the last seat.
+    """
+    apps = apps.copy()
+    v = cfg.VACANCIES_PER_COMPANY
+
+    iv = apps[apps["final_score"].notna()].copy()
+    iv = iv.sort_values(
+        ["company_id", "final_score", cfg.TIEBREAK_COLUMN, "application_id"],
+        ascending=[True, False, False, True],
+    )
+    iv["rank"] = iv.groupby("company_id").cumcount()      # 0 = best in that company
+    iv["selected"] = iv["rank"] < v
+
+    # ---- H3: did the tie-break decide the last seat? ----
+    # Compare the last selected candidate (rank v-1) with the first rejected one (rank v).
+    last_in = iv[iv["rank"] == v - 1].set_index("company_id")
+    first_out = iv[iv["rank"] == v].set_index("company_id")
+    common = last_in.index.intersection(first_out.index)   # companies that had more than v candidates
+
+    tied = last_in.loc[common, "final_score"] == first_out.loc[common, "final_score"]
+    # The tie-break only mattered if the coding scores differed (otherwise application_id decided)
+    coding_decided = tied & (
+        last_in.loc[common, cfg.TIEBREAK_COLUMN] != first_out.loc[common, cfg.TIEBREAK_COLUMN]
+    )
+    h3_info = {
+        "companies_with_competition": len(common),
+        "last_seat_tied_on_final_score": int(tied.sum()),
+        "decided_by_coding_tiebreak": int(coding_decided.sum()),
+        "decided_by_application_id": int((tied & ~coding_decided).sum()),
+    }
+
+    apps["selected"] = pd.Series(pd.NA, index=apps.index, dtype="boolean")
+    apps.loc[iv.index, "selected"] = iv["selected"]
+    return apps, h3_info
 
 def plot_academics_heatmap(df):
     import matplotlib.pyplot as plt
@@ -214,7 +253,7 @@ if __name__ == "__main__":
     apps = build_applications(academics)      # <- 'apps' is born here
     apps = generate_oa(apps, academics)       # <- and updated here
     apps = generate_interviews(apps)          # <- only now can this line run
-
+    apps, h3 = select_candidates(apps)
     # 2) Funnel checks
     print("Funnel:")
     print("  applications :", len(apps))
@@ -236,3 +275,10 @@ if __name__ == "__main__":
     print("\nDistinct final scores:", iv["final_score"].nunique())
     print("H2 coefficients (technical ~ oa_total + coding):", h2_check(apps))
     print("technical clipped at 100:", (iv["technical"] >= 100).sum())
+
+
+        # 4) Selection checks
+    print("\nSelected total:", int(apps["selected"].sum()), "(expected", cfg.TARGETS["selected_total_expected"], ")")
+    print("Selected per company:")
+    print(apps[apps["selected"].notna()].groupby("company_id")["selected"].sum())
+    print("\nH3 tie-break summary:", h3)
