@@ -81,3 +81,5 @@
 **Decision:** Within each company, candidates are ranked by final_score, then coding (higher wins), then application_id (for reproducibility). Top 8 are selected.
 **Result:** 96 selected (8 per company). The last seat was tied on final_score at 6 of 12 companies, and in all 6 the coding tie-break decided it. application_id was never needed.
 **Interpretation:** The tie-break is common in this data because final scores are rounded to integers and many candidates cluster near the cut line. This measures frequency only, not fairness. Result depends on integer rounding.
+
+##“Injected six kinds of mess into placement_raw.csv. Kept placement_truth.csv as an answer key. eligible is not recomputed during cleaning because it was set from the true JEE.”

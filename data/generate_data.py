@@ -226,6 +226,63 @@ def select_candidates(apps):
     apps.loc[iv.index, "selected"] = iv["selected"]
     return apps, h3_info
 
+def inject_mess(truth, seed=cfg.SEED):
+    """
+    Take the clean 'truth' table and return a messy copy, like real data would be.
+    Never touches application_id, student_id, company_id, company_category, eligible,
+    oa_total, oa_cleared, final_score or selected, so the answer key stays recoverable.
+    Returns (raw_df, log) where log counts what was injected.
+    """
+    rng = np.random.default_rng(seed + 4)       # new independent random stream
+    m = cfg.MESS
+    df = truth.copy()
+    log = {}
+
+    # 1) Missing JEE: chosen per STUDENT, so all 5 of a student's rows lose it together
+    student_ids = df["student_id"].unique()
+    gone = student_ids[rng.random(len(student_ids)) < m["jee_missing_rate"]]
+    mask = df["student_id"].isin(gone)
+    df.loc[mask, "jee_percentile"] = np.nan
+    log["jee_missing_students"] = len(gone)
+    log["jee_missing_rows"] = int(mask.sum())
+
+    # 2) CGPA typos: 8.5 typed as 85 (chosen per ROW, like a form-entry mistake)
+    mask = rng.random(len(df)) < m["cgpa_typo_rate"]
+    df.loc[mask, "cgpa"] = df.loc[mask, "cgpa"] * 10
+    log["cgpa_typos"] = int(mask.sum())
+
+    # 3) Impossible values (outliers) in 10th/12th percentages
+    idx = np.flatnonzero(rng.random(len(df)) < m["outlier_rate"])
+    cols = rng.choice(["tenth_pct", "twelfth_pct"], len(idx))
+    vals = rng.choice([-10, 0, 105, 150], len(idx))
+    for i, c, v in zip(idx, cols, vals):
+        df.iloc[i, df.columns.get_loc(c)] = v
+    log["outliers"] = len(idx)
+
+    # 4) Random missing cells in measured columns (each column independently)
+    random_cols = ["tenth_pct", "twelfth_pct", "cgpa", "logical", "quant",
+                   "coding", "english", "behavioral", "technical", "hr"]
+    for col in random_cols:
+        mask = rng.random(len(df)) < m["random_missing_rate"]
+        df.loc[mask, col] = np.nan
+
+    # 5) Percentages stored as text like "82%" (done late, so NaNs and outliers are handled first)
+    n_str = 0
+    for col in ["tenth_pct", "twelfth_pct"]:
+        mask = (rng.random(len(df)) < m["pct_as_string_rate"]) & df[col].notna()
+        df[col] = df[col].astype(object)
+        df.loc[mask, col] = df.loc[mask, col].map(lambda v: f"{v:g}%")
+        n_str += int(mask.sum())
+    log["pct_as_string_cells"] = n_str
+
+    # 6) Exact duplicate rows, then shuffle so they are not sitting next to the originals
+    dup = df[rng.random(len(df)) < m["duplicate_rows_rate"]]
+    df = pd.concat([df, dup], ignore_index=True)
+    df = df.iloc[rng.permutation(len(df))].reset_index(drop=True)
+    log["duplicate_rows"] = len(dup)
+
+    return df, log
+
 def plot_academics_heatmap(df):
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -288,3 +345,9 @@ if __name__ == "__main__":
     out_path = cfg.RAW_DIR / "placement_truth.csv"
     apps.to_csv(out_path, index=False)
     print("\nSaved:", out_path, "| rows:", len(apps), "| columns:", len(apps.columns))
+
+        # 6) Create and save the messy file that the notebooks will read
+    raw, mess_log = inject_mess(apps)
+    raw.to_csv(cfg.RAW_DIR / "placement_raw.csv", index=False)
+    print("\nMess injected:", mess_log)
+    print("Raw rows:", len(raw))
