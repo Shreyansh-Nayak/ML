@@ -282,3 +282,9 @@ if __name__ == "__main__":
     print("Selected per company:")
     print(apps[apps["selected"].notna()].groupby("company_id")["selected"].sum())
     print("\nH3 tie-break summary:", h3)
+
+        # 5) Save the clean "answer key" (before any mess is added)
+    cfg.RAW_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = cfg.RAW_DIR / "placement_truth.csv"
+    apps.to_csv(out_path, index=False)
+    print("\nSaved:", out_path, "| rows:", len(apps), "| columns:", len(apps.columns))
