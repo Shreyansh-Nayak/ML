@@ -83,3 +83,13 @@
 **Interpretation:** The tie-break is common in this data because final scores are rounded to integers and many candidates cluster near the cut line. This measures frequency only, not fairness. Result depends on integer rounding.
 
 ##“Injected six kinds of mess into placement_raw.csv. Kept placement_truth.csv as an answer key. eligible is not recomputed during cleaning because it was set from the true JEE.”
+
+## 16. Cleaning decisions
+- Dropped exact duplicate rows, which brought 15,1xx rows back to 15,000.
+- Converted "82%" text to numbers; marked percentages <35 or >100 as missing.
+- Divided CGPA > 10 by 10 (typing error).
+- Student-level columns (10th, 12th, JEE, CGPA) are identical on all of a student's rows, so gaps were filled from the student's other applications instead of using a mean.
+- Where exactly one OA section was missing, solved it from oa_total, since the total is a known weighted sum.
+- Left JEE missing for students who have no score in any row, added a jee_missing flag, and will impute inside the modelling pipeline on training data only to avoid leakage.
+- Kept NaN in stage columns for rows that never reached that stage (not an error).
+- Validated the result against placement_truth.csv.

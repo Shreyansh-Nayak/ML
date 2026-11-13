@@ -351,3 +351,4 @@ if __name__ == "__main__":
     raw.to_csv(cfg.RAW_DIR / "placement_raw.csv", index=False)
     print("\nMess injected:", mess_log)
     print("Raw rows:", len(raw))
+
