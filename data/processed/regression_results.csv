@@ -1,0 +1,7 @@
+task,model,MAE,RMSE,R2
+oa_total from academics,dummy,7.344,9.107,-0.001
+oa_total from academics,linear,4.36,5.448,0.641
+oa_total from academics,rf,4.542,5.656,0.613
+final_score from academics + OA,dummy,5.162,6.376,-0.007
+final_score from academics + OA,linear,3.814,4.711,0.448
+final_score from academics + OA,rf,4.021,4.985,0.383

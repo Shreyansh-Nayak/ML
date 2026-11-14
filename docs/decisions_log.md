@@ -103,3 +103,19 @@
 - The simulation is built from linear formulas, so a linear model matches the truth.
 - Recall is high partly because of class_weight="balanced", which trades precision for recall. Average precision (0.92 for D) is the fairer summary for an imbalanced target. Also, with only 96 positives, each fold has about 19, so the numbers are noisy.
 - Caveat: selection is top-8 per company, so labels depend on competing applicants. Cross-validation across companies is an approximation.This is a limitation
+
+## 18. Evaluation answers
+- DummyRegressor predicts the training mean, so its R2 is about 0. It is the minimum a real model must beat.
+- Bootstrap resamples whole students, not rows, because one student's rows are correlated. Resampling rows would give an interval that is too narrow.
+- The planted-weights check recovers a formula I wrote myself. It validates that the pipeline preserves the structure, but it is not a discovery about real placements.
+
+## 19. H2 and planted-weights results
+- Coding coefficient (technical ~ oa_total + coding): 0.152, 95% bootstrap interval by student [0.069, 0.237]. It excludes 0, so the direct coding effect is detectable. The planted value 0.25 lies just outside the interval, so the effect size is underestimated (range restriction, overlap with oa_total).
+- Permutation importance of coding in a random forest: 0.059 +/- 0.023, a second method that agrees. Held-out R2 was only 0.147 because interview noise is large.
+- H2 verdict: supported, but the effect was planted, so this shows the method can detect it.
+- Final-score weights recovered as 0.401 / 0.349 / 0.249 against planted 0.40 / 0.35 / 0.25. This validates the pipeline; it is not a discovery.
+
+## 20. Regression results (5-fold grouped CV)
+- oa_total from academics: linear R2 0.641, MAE 4.36 (dummy: R2 about 0, MAE 7.34). Matches the generator's in-sample R2 of 0.643, so no overfitting.
+- final_score from academics + OA: linear R2 0.448, MAE 3.81 (dummy: R2 about 0, MAE 5.16). Limited because 60% of the score comes from interviews not yet observed.
+- Linear beat random forest in both tasks, because the simulator uses linear formulas. This is a property of the synthetic data, not a general claim.

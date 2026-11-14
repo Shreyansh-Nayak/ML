@@ -1,0 +1,21 @@
+{
+  "stage1": [
+    "tenth_pct",
+    "twelfth_pct",
+    "jee_percentile",
+    "cgpa",
+    "jee_missing"
+  ],
+  "stage2": [
+    "tenth_pct",
+    "twelfth_pct",
+    "jee_percentile",
+    "cgpa",
+    "jee_missing",
+    "logical",
+    "quant",
+    "coding",
+    "english",
+    "behavioral"
+  ]
+}
