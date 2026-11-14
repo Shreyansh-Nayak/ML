@@ -119,3 +119,6 @@
 - oa_total from academics: linear R2 0.641, MAE 4.36 (dummy: R2 about 0, MAE 7.34). Matches the generator's in-sample R2 of 0.643, so no overfitting.
 - final_score from academics + OA: linear R2 0.448, MAE 3.81 (dummy: R2 about 0, MAE 5.16). Limited because 60% of the score comes from interviews not yet observed.
 - Linear beat random forest in both tasks, because the simulator uses linear formulas. This is a property of the synthetic data, not a general claim.
+
+## 21.
+- “predict.py keeps rules (is_eligible, OA cutoff) separate from models, validates inputs, treats missing JEE as ineligible, and reports selection_score as a ranking score.”
