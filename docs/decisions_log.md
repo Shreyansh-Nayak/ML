@@ -93,3 +93,13 @@
 - Left JEE missing for students who have no score in any row, added a jee_missing flag, and will impute inside the modelling pipeline on training data only to avoid leakage.
 - Kept NaN in stage columns for rows that never reached that stage (not an error).
 - Validated the result against placement_truth.csv.
+
+
+## 17.Modeling of the dataset
+- Compared two Model namely logistic regression and random forest.
+- Compared the parameters of both the models and judged them on the basis of the recall,average precision etc.
+- Found that logistic Regression is slightly better than the random forest model on this particular synthetic dataset that is used.
+- Logistic regression beats Random Forest slightly, and recall is much higher with it (0.95 vs 0.71 for D).
+- The simulation is built from linear formulas, so a linear model matches the truth.
+- Recall is high partly because of class_weight="balanced", which trades precision for recall. Average precision (0.92 for D) is the fairer summary for an imbalanced target. Also, with only 96 positives, each fold has about 19, so the numbers are noisy.
+- Caveat: selection is top-8 per company, so labels depend on competing applicants. Cross-validation across companies is an approximation.This is a limitation
