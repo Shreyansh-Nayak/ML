@@ -176,10 +176,53 @@ Run scripts from the project root. Results are reproducible because of the fixed
 
 ## Project Visuals
 ![Tab1](./Screenshot%20Images/image1.png)
+
+-This is the app’s home screen. The sidebar takes the academic profile: 10th % (88), 12th % (85), CGPA (8.9), JEE percentile (93) and company type (Non-Dream).
+-The banner states that it is a decision-support prototype trained on synthetic data and is not a hiring judge.
+-The verdict reads “Moderate readiness”: the OA is described as a coin flip (about 67%), with coding and quant as the heaviest sections.
+-The student is eligible and has an expected OA total of 67.4, which is 2.4 above the cutoff of 65.
+-A progress bar shows 67.4/100 against the cutoff.
+-A note says the typical error is about 4–5 points (cross-validated MAE 4.4), and that the clearing chance is a rough estimate that assumes normally distributed errors.
+
 ![Tab2](./Screenshot%20Images/image2.png)
+
+-This tab asks for the five OA section scores (logical, quant, coding, English, behavioral), each set to 65 on a slider.
+-The OA total comes to 65.0 and the “OA cleared?” check shows Yes.
+-The selection score is 0.029, which is 0.3x the typical OA-clearer, and the expected final score is 62.3.
+-A note explains that the selection score is a ranking score, not a true probability, because the model was trained with balanced class weights. It also says interviews are not observed yet.
+-The verdict is “average or below (0.3x typical). Interviews will decide.”
+
 ![Tab3](./Screenshot%20Images/image3.png)
+
+This tab shows how the expected OA total changes when one academic value is varied while everything else stays as in the sidebar. Here the varied value is CGPA.
+The line chart has two lines: the expected OA total and the flat OA cutoff at 65.
+The expected OA total rises steadily with CGPA, from the mid-50s at low CGPA to about 77 at 10.
+It crosses the cutoff at roughly CGPA 8.6, so higher CGPA moves a student from below to above the clearing line.
+This lets a student see which improvement would help most.
+
 ![Tab4](./Screenshot%20Images/image4.png)
-![Tab5](./Screenshot%20Images/image5.png)
+
+The top of this tab shows precision at cutoff of 0.79 and recall at cutoff of 0.71 for predicting who clears the OA.
+The scatter plot compares the predicted OA score (pred_oa) with the actual OA total (oa_total).
+The points follow the “perfect prediction” line closely, which shows the predictions track real outcomes.
+The caption says every point is an application the model never saw, using out-of-sample, student-grouped validation.
+It also notes that one student can appear several times.
+
+![Tab4](./Screenshot%20Images/image5.png)
+
+The regression table uses 5-fold grouped cross-validation and compares a dummy baseline, linear regression and random forest. The measures are MAE, RMSE and R².
+Predicting OA total from academics, linear gets MAE 4.36 and R² 0.641, random forest gets 4.542 and 0.613, and the dummy baseline gets 7.344 and about 0.
+Predicting final score from academics plus OA, linear gets MAE 3.814 and R² 0.448, random forest gets 4.021 and 0.383, and the dummy baseline gets 5.162 and about 0.
+Both real models clearly beat the dummy baseline, and linear regression slightly beats random forest in this table.
+The second table, “Selection models A–D (AUC)”, lists AUC, its standard deviation, average precision and recall. Model A (academics only) has AUC 0.793 and model B has 0.900.
+
+![Tab4](./Screenshot%20Images/image6.png)
+
+This bar chart compares ROC-AUC (5-fold grouped CV) for logistic regression and random forest across four feature sets: A (academics), B (+ OA), C (+ interviews) and D (all).
+One set of bars scores 0.793, 0.900, 0.969 and 0.987 for A to D, and the other scores 0.754, 0.886, 0.966 and 0.981.
+Predictive power rises with each added stage. Adding OA scores gives a big jump, and adding interview scores gives another.
+The two models end up close, with the logistic regression values in the table above matching the first set of bars.
+The chart’s legend colours look mismatched with the bars, so the legend needs checking before you use it in your presentation.
 
 ## 10. Limitations and Ethics
 
