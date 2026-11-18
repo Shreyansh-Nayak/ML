@@ -174,6 +174,13 @@ streamlit run app/streamlit_app.py
 
 Run scripts from the project root. Results are reproducible because of the fixed seed (`SEED = 42` in `config.py`).
 
+## Project Visuals
+![Tab1](./Screenshot%20Images/image1.png)
+![Tab2](./Screenshot%20Images/image2.png)
+![Tab3](./Screenshot%20Images/image3.png)
+![Tab4](./Screenshot%20Images/image4.png)
+![Tab5](./Screenshot%20Images/image5.png)
+
 ## 10. Limitations and Ethics
 
 - **Synthetic data.** Accuracy shows the method works on a process I simulated, not on real placements.
